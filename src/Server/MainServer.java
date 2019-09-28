@@ -1,11 +1,18 @@
 package Server;
 
-import Client.Client;
 
+import java.io.IOException;
 
 public class MainServer {
+    public static final int SERVER_PORT = 7777;
+
     public static void main(String[] args){
-        Server server = new Server(8);
+        try{
+            Server server = new Server(SERVER_PORT);
+        } catch(IOException ex){
+            ex.printStackTrace();
+        }
+
 
 
     }

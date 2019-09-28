@@ -1,24 +1,28 @@
 package Client;
 
 import Client.ClientExceptions.ClientException;
+import Server.Server;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 public class Client {
     private String filePath;
-    private int serverPort;
     private static final int MAX_FILENAME_LENGTH = 4096;
     private long fileLength;
+    private Socket socket;
 
-    public Client(String path, String serverName, int serverPort) throws ClientException{
+    public Client(String path, String serverName, int serverPort) throws ClientException, UnknownHostException,
+            IOException {
         filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
         checkFile();
-        this.serverPort = serverPort;
+        socket = new Socket(serverName, serverPort);
     }
 
-    private
-    void checkFile() throws ClientException{
+    private void checkFile() throws ClientException{
         File file = new File(filePath);
         if(!file.exists()){
             throw new ClientException("File " + filePath + " doesn't exist");
