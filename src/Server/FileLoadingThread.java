@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 /*
 * протокол - сначала передается число байт имени файла - int,
@@ -17,7 +18,7 @@ public class FileLoadingThread implements Runnable {
     private Socket clientSocket;
     private static final int DELAY_MILSEC = 3000;
     private static final int BUFSIZE = 256;
-    private volatile long recvBytesAmount;
+    private AtomicLong recvBytesAmount = new AtomicLong();
     private final int threadNumb;
     private long readBytes, fileSize;
     private File file;
@@ -37,11 +38,11 @@ public class FileLoadingThread implements Runnable {
             private final long startMilSec = new Date().getTime();
             @Override
             public void run() {
-                long bytesAmount = recvBytesAmount;
+                long bytesAmount = recvBytesAmount.get();
                 double momentSpeed = (bytesAmount - prevBytesAmount) / sec;
                 prevBytesAmount = bytesAmount;
                 double allSec = ((new Date()).getTime() - startMilSec)/(double)1000;
-                double allTimeSpeed = recvBytesAmount / allSec;
+                double allTimeSpeed = bytesAmount / allSec;
                 System.out.println("Thread " + threadNumb + ". Moment speed " + momentSpeed + " bytes per sec");
                 System.out.println("Thread " + threadNumb + ". Average speed " + allTimeSpeed + " bytes/sec");
             }
@@ -52,7 +53,7 @@ public class FileLoadingThread implements Runnable {
         int nameBytes = in.readInt(), readBytes = 0;
         byte[] buf = new byte[BUFSIZE];
         StringBuilder fileName = new StringBuilder();
-        recvBytesAmount+=4;
+        recvBytesAmount.addAndGet(4);
         while(readBytes < nameBytes){
             int length = in.read(buf);
             readBytes+= length;
@@ -73,13 +74,13 @@ public class FileLoadingThread implements Runnable {
         }
         try(FileOutputStream fileWriter = new FileOutputStream(file)){
             fileSize = in.readLong();
-            recvBytesAmount+=8;
+            recvBytesAmount.addAndGet(8);
             int bufSize = BUFSIZE; //bufSize ?
             byte[] buf = new byte[BUFSIZE];
             while(readBytes < fileSize){
                 int length = in.read(buf);
                 readBytes += length;
-                recvBytesAmount+=length;
+                recvBytesAmount.addAndGet(length);
                 fileWriter.write(buf, 0, length);
                 //нужен ли контроль буфера?
                 if(length == bufSize){
