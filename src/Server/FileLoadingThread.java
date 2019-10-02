@@ -97,7 +97,7 @@ public class FileLoadingThread implements Runnable {
                 = new DataOutputStream(clientSocket.getOutputStream())) {
             readFile(in, out, readFileName(in, out));
         } catch(IOException ex) {
-            ex.printStackTrace(); //runtime
+            throw new RuntimeException(ex);
         } finally {
             if(readBytes == fileSize){
                 System.out.println("Successful operation");

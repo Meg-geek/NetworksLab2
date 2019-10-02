@@ -19,7 +19,7 @@ public class Server implements TCPServer{
     }
 
     //how to handle exceptions properly?
-    public void work(int port) throws IOException{
+    public void work(int port){
         try(ServerSocket serverSocket = new ServerSocket(port, backlog, InetAddress.getByName(HOST))){
             int threadNumb = 0;
             while(true){
@@ -28,6 +28,8 @@ public class Server implements TCPServer{
                 serverThread.start();
                 threadNumb++;
             }
+        } catch(IOException ex){
+            throw new RuntimeException(ex);
         }
     }
 }
