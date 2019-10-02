@@ -10,7 +10,8 @@ import java.util.TimerTask;
 * протокол - сначала передается число байт имени файла - int,
  * затем имя файла,
  * потом размер Файла - long,
- * затем файл*/
+ * затем файл
+ * */
 
 public class FileLoadingThread implements Runnable {
     private Socket clientSocket;
@@ -32,14 +33,14 @@ public class FileLoadingThread implements Runnable {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             private long prevBytesAmount = 0;
-            private final double sec = DELAY_MILSEC / 1000;
+            private final double sec = DELAY_MILSEC / (double)1000;
             private final long startMilSec = new Date().getTime();
             @Override
             public void run() {
                 long bytesAmount = recvBytesAmount;
                 double momentSpeed = (bytesAmount - prevBytesAmount) / sec;
                 prevBytesAmount = bytesAmount;
-                double allSec = ((new Date()).getTime() - startMilSec)/1000;
+                double allSec = ((new Date()).getTime() - startMilSec)/(double)1000;
                 double allTimeSpeed = recvBytesAmount / allSec;
                 System.out.println("Thread " + threadNumb + ". Moment speed " + momentSpeed + " bytes per sec");
                 System.out.println("Thread " + threadNumb + ". Average speed " + allTimeSpeed + " bytes/sec");
@@ -70,7 +71,7 @@ public class FileLoadingThread implements Runnable {
             return; //?
             //throw ServerException("File " + fileName + "already exists on server"); ?
         }
-        try(FileOutputStream fileWriter = new FileOutputStream(file);){
+        try(FileOutputStream fileWriter = new FileOutputStream(file)){
             fileSize = in.readLong();
             recvBytesAmount+=8;
             int bufSize = BUFSIZE; //bufSize ?
@@ -100,7 +101,7 @@ public class FileLoadingThread implements Runnable {
         try (DataInputStream in
                      = new DataInputStream(clientSocket.getInputStream());
         DataOutputStream out
-                = new DataOutputStream(clientSocket.getOutputStream());) {
+                = new DataOutputStream(clientSocket.getOutputStream())) {
             readFile(in, out, readFileName(in, out));
         } catch(IOException ex) {
             ex.printStackTrace();

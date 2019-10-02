@@ -8,26 +8,26 @@ import java.net.Socket;
 
 public class Server implements TCPServer{
     public static final String DIR_NAME = "uploads";
-    private ServerSocket serverSocket;
     public static final String HOST = "localhost";
     private final int backlog = 50;
 
-    public Server(int port) throws IOException {
+    public Server(){
         File dir = new File(DIR_NAME);
         if(!dir.exists() && !dir.mkdir()){
             System.out.println("Can't make an upload directory");
         }
-        serverSocket = new ServerSocket(port, backlog, InetAddress.getByName(HOST));
     }
 
     //how to handle exceptions properly?
-    public void work() throws IOException{
-        int threadNumb = 0;
-        while(true){
-            Socket clientSocket = serverSocket.accept();
-            Thread serverThread = new Thread(new FileLoadingThread(clientSocket, threadNumb));
-            serverThread.start();
-            threadNumb++;
+    public void work(int port) throws IOException{
+        try(ServerSocket serverSocket = new ServerSocket(port, backlog, InetAddress.getByName(HOST))){
+            int threadNumb = 0;
+            while(true){
+                Socket clientSocket = serverSocket.accept();
+                Thread serverThread = new Thread(new FileLoadingThread(clientSocket, threadNumb));
+                serverThread.start();
+                threadNumb++;
+            }
         }
     }
 }

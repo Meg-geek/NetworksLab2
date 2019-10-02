@@ -3,27 +3,53 @@ package Client;
 import Client.ClientExceptions.ClientException;
 import Server.Server;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
-public class Client {
+public class Client implements TCPClient{
     private String filePath;
     private static final int MAX_FILENAME_LENGTH = 4096;
+    private static final int BUF_SIZE = 256;
     private long fileLength;
     private Socket socket;
+    private File file;
 
-    public Client(String path, String serverName, int serverPort) throws ClientException, UnknownHostException,
-            IOException {
+    public void sendFile(String path, String serverName, int serverPort) throws ClientException, IOException{
         filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
         checkFile();
+        sendFile(serverName, serverPort);
+
+    }
+
+    /*
+     * протокол - сначала передается число байт имени файла - int,
+     * затем имя файла,
+     * потом размер Файла - long,
+     * затем файл
+     * */
+    private void sendFile(String serverName, int serverPort) throws IOException{
         socket = new Socket(serverName, serverPort);
+        try(DataInputStream in =
+                    new DataInputStream(socket.getInputStream());
+            DataOutputStream out =
+                    new DataOutputStream(socket.getOutputStream());
+            FileInputStream fileInputStream = new FileInputStream(file)){
+            out.writeInt(file.getName().getBytes().length);
+            out.writeBytes(file.getName());
+            out.writeLong(file.length());
+            byte[] buf = new byte[BUF_SIZE];
+            int bytesRead = fileInputStream.read(buf);
+            while(bytesRead != -1){
+                out.write(buf, 0, bytesRead);
+                bytesRead = fileInputStream.read(buf);
+            }
+        }
     }
 
     private void checkFile() throws ClientException{
-        File file = new File(filePath);
+        file = new File(filePath);
         if(!file.exists()){
             throw new ClientException("File " + filePath + " doesn't exist");
         }
