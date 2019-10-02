@@ -82,14 +82,6 @@ public class FileLoadingThread implements Runnable {
                 readBytes += length;
                 recvBytesAmount.addAndGet(length);
                 fileWriter.write(buf, 0, length);
-                //нужен ли контроль буфера?
-                if(length == bufSize){
-                    buf = new byte[bufSize * 2];
-                }
-                if(length < BUFSIZE){
-                    buf = new byte[BUFSIZE];
-                }
-                //??
             }
         } catch(IOException ex){
             throw ex;
@@ -105,7 +97,7 @@ public class FileLoadingThread implements Runnable {
                 = new DataOutputStream(clientSocket.getOutputStream())) {
             readFile(in, out, readFileName(in, out));
         } catch(IOException ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(); //runtime
         } finally {
             if(readBytes == fileSize){
                 System.out.println("Successful operation");
