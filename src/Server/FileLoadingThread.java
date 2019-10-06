@@ -2,6 +2,7 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,10 +21,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class FileLoadingThread implements Runnable {
     private Socket clientSocket;
     private static final int DELAY_MILSEC = 3000;
-    private static final int BUFSIZE = 256;
-    private AtomicLong recvBytesAmount = new AtomicLong();
+    private static final int BUFSIZE = 1024;
+    private AtomicLong readBytesAmount = new AtomicLong();
     private final int threadNumb;
-    private long readBytes, fileSize;
+    private long fileSize, readFileBytes;
     private File file;
     private Timer timer;
 
@@ -40,7 +41,7 @@ public class FileLoadingThread implements Runnable {
             private final long startMilSec = new Date().getTime();
             @Override
             public void run() {
-                long bytesAmount = recvBytesAmount.get();
+                long bytesAmount = readBytesAmount.get();
                 double momentSpeed = (bytesAmount - prevBytesAmount) / sec;
                 prevBytesAmount = bytesAmount;
                 double allSec = ((new Date()).getTime() - startMilSec)/(double)1000;
@@ -52,37 +53,35 @@ public class FileLoadingThread implements Runnable {
     }
 
     private String readFileName(DataInputStream in) throws IOException{
-        int nameBytes = in.readInt(), readBytes = 0;
+        int nameBytes = in.readInt(), readNameBytes = 0;
         byte[] buf = new byte[BUFSIZE];
-        StringBuilder fileName = new StringBuilder();
-        recvBytesAmount.addAndGet(4);
-        while(readBytes < nameBytes){
-            int length = in.read(buf);
-            readBytes+= length;
-            for(int i = 0; i < length; i++){
-                fileName.append(buf[i]);
-            }
+        ByteArrayOutputStream fileNameStream = new ByteArrayOutputStream();
+        readBytesAmount.addAndGet(4);
+        while(readNameBytes < nameBytes){
+            int length = in.read(buf, 0, nameBytes - readNameBytes);
+            readNameBytes+= length;
+            fileNameStream.write(buf, 0, length);
         }
-        return fileName.toString();
+        System.out.println("File name " + fileNameStream.toString(StandardCharsets.UTF_8));
+        return fileNameStream.toString(StandardCharsets.UTF_8);
     }
 
     private void readFile(DataInputStream in, String fileName) throws IOException{
-        file = new File(TCPServer.DIR_NAME + System.lineSeparator() + fileName);
+        file = new File(TCPServer.DIR_NAME + File.separator + fileName);
         if(!file.createNewFile()){
             //how?
-            System.out.println("File " + fileName + "already exists on server");
+            System.out.println("File " + fileName + " already exists on server");
             return; //?
             //throw ServerException("File " + fileName + "already exists on server"); ?
         }
         try(FileOutputStream fileWriter = new FileOutputStream(file)){
             fileSize = in.readLong();
-            recvBytesAmount.addAndGet(8);
-            int bufSize = BUFSIZE; //bufSize ?
+            readBytesAmount.addAndGet(8);
             byte[] buf = new byte[BUFSIZE];
-            while(readBytes < fileSize){
+            while(readFileBytes < fileSize){
                 int length = in.read(buf);
-                readBytes += length;
-                recvBytesAmount.addAndGet(length);
+                readFileBytes+=length;
+                readBytesAmount.addAndGet(length);
                 fileWriter.write(buf, 0, length);
             }
         } catch(IOException ex){
@@ -95,26 +94,21 @@ public class FileLoadingThread implements Runnable {
         startTimer();
         try (DataInputStream in
                      = new DataInputStream(clientSocket.getInputStream());
+             DataOutputStream out
+                     = new DataOutputStream(clientSocket.getOutputStream())
         ) {
             readFile(in, readFileName(in));
+            if(readFileBytes == fileSize){
+                out.writeInt(TCPServer.SUCCESS);
+            } else {
+                out.writeInt(TCPServer.FAILURE);
+                file.delete();
+            }
         } catch(IOException ex) {
             timer.cancel();
             throw new RuntimeException(ex);
         } finally {
-            try(DataOutputStream out
-                        = new DataOutputStream(clientSocket.getOutputStream())){
-                if(readBytes == fileSize){
-                    out.writeInt(TCPServer.SUCCESS);
-                } else {
-                    out.writeInt(TCPServer.FAILURE);
-                    file.delete();
-                }
-            } catch(IOException ex){
-                timer.cancel();
-                throw new RuntimeException(ex);
-            } finally {
-                timer.cancel();
-            }
+            timer.cancel();
         }
     }
 }

@@ -10,16 +10,22 @@ import java.nio.charset.StandardCharsets;
 public class Client implements TCPClient{
     private String filePath;
     private static final int MAX_FILENAME_LENGTH = 4096;
-    private static final int BUF_SIZE = 256;
+    private static final int BUF_SIZE = 1024;
     private long fileLength;
-    private Socket socket;
     private File file;
 
     public void sendFile(String path, String serverName, int serverPort) throws ClientException, IOException{
         filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
         checkFile();
-        sendFile(serverName, serverPort);
-        checkDataTransfer();
+        try(Socket socket = new Socket(serverName, serverPort);
+            DataInputStream in
+                    = new DataInputStream(socket.getInputStream());
+            DataOutputStream out
+                    = new DataOutputStream(socket.getOutputStream())
+        ){
+            sendFile(out);
+            checkDataTransfer(in);
+        }
     }
 
     /*
@@ -32,23 +38,21 @@ public class Client implements TCPClient{
      * и отправляет соответвенно константу, успешно ли завершилась передача
      * */
 
-    private void checkDataTransfer() throws IOException{
-        try(DataInputStream in = new DataInputStream(socket.getInputStream())){
-            if(in.readInt() == TCPServer.SUCCESS){
-                System.out.println("File " + file.getName() + " was sent successfully");
-            } else {
-                System.out.println("Failure in sending file " + file.getName());
-            }
+    private void checkDataTransfer(DataInputStream in) throws IOException{
+        int result = in.readInt();
+        System.out.println(result);
+        if( result == TCPServer.SUCCESS){
+            System.out.println("File " + file.getName() + " was sent successfully");
+        } else {
+            System.out.println("Failure in sending file " + file.getName());
         }
     }
 
-    private void sendFile(String serverName, int serverPort) throws IOException{
-        socket = new Socket(serverName, serverPort);
-        try(DataOutputStream out =
-                    new DataOutputStream(socket.getOutputStream());
-            FileInputStream fileInputStream = new FileInputStream(file)){
+    private void sendFile(DataOutputStream out) throws IOException{
+        try(FileInputStream fileInputStream
+                    = new FileInputStream(file)){
             out.writeInt(file.getName().getBytes().length);
-            out.writeBytes(file.getName());
+            out.write(file.getName().getBytes());
             out.writeLong(file.length());
             byte[] buf = new byte[BUF_SIZE];
             int bytesRead = fileInputStream.read(buf);

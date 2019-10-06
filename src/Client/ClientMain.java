@@ -13,7 +13,7 @@ public class ClientMain {
         Client client1;
         try{
             client1 = new Client();
-            client1.sendFile("src/example.txt", TCPServer.HOST, MainServer.SERVER_PORT);
+            client1.sendFile("src/test.txt", TCPServer.HOST, MainServer.SERVER_PORT);
         } catch(UnknownHostException ex){
             ex.printStackTrace();
         }
