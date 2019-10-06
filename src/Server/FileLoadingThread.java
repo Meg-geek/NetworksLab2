@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class FileLoadingThread implements Runnable {
     private Socket clientSocket;
     private static final int DELAY_MILSEC = 3000;
-    private static final int BUFSIZE = 1024;
+    private static final int BUFSIZE = 256;
     private AtomicLong readBytesAmount = new AtomicLong();
     private final int threadNumb;
     private long fileSize, readFileBytes;
@@ -62,7 +62,6 @@ public class FileLoadingThread implements Runnable {
             readNameBytes+= length;
             fileNameStream.write(buf, 0, length);
         }
-        System.out.println("File name " + fileNameStream.toString(StandardCharsets.UTF_8));
         return fileNameStream.toString(StandardCharsets.UTF_8);
     }
 

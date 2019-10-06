@@ -10,10 +10,11 @@ import Server.TCPServer;
 
 public class ClientMain {
     public static void main(String[] args){
-        Client client1;
+        Client client;
         try{
-            client1 = new Client();
-            client1.sendFile("src/test.txt", TCPServer.HOST, MainServer.SERVER_PORT);
+            client = new Client();
+            client.sendFile("src/test.txt", TCPServer.HOST, MainServer.SERVER_PORT);
+            //client.sendFile("src/image.jpeg", TCPServer.HOST, MainServer.SERVER_PORT);
         } catch(UnknownHostException ex){
             ex.printStackTrace();
         }
