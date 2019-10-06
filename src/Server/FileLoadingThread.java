@@ -68,6 +68,7 @@ public class FileLoadingThread implements Runnable {
 
     private void readFile(DataInputStream in, String fileName) throws IOException{
         file = new File(TCPServer.DIR_NAME + File.separator + fileName);
+        fileSize = in.readLong();
         if(!file.createNewFile()){
             //how?
             System.out.println("File " + fileName + " already exists on server");
@@ -75,7 +76,6 @@ public class FileLoadingThread implements Runnable {
             //throw ServerException("File " + fileName + "already exists on server"); ?
         }
         try(FileOutputStream fileWriter = new FileOutputStream(file)){
-            fileSize = in.readLong();
             readBytesAmount.addAndGet(8);
             byte[] buf = new byte[BUFSIZE];
             while(readFileBytes < fileSize){
@@ -102,7 +102,9 @@ public class FileLoadingThread implements Runnable {
                 out.writeInt(TCPServer.SUCCESS);
             } else {
                 out.writeInt(TCPServer.FAILURE);
-                file.delete();
+                if(readFileBytes > 0){
+                    file.delete();
+                }
             }
         } catch(IOException ex) {
             timer.cancel();

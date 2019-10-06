@@ -39,9 +39,7 @@ public class Client implements TCPClient{
      * */
 
     private void checkDataTransfer(DataInputStream in) throws IOException{
-        int result = in.readInt();
-        System.out.println(result);
-        if( result == TCPServer.SUCCESS){
+        if(in.readInt() == TCPServer.SUCCESS){
             System.out.println("File " + file.getName() + " was sent successfully");
         } else {
             System.out.println("Failure in sending file " + file.getName());
