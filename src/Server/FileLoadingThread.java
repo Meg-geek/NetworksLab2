@@ -49,7 +49,7 @@ public class FileLoadingThread implements Runnable {
         }, DELAY_MILSEC, DELAY_MILSEC);
     }
 
-    private String readFileName(DataInputStream in, DataOutputStream out) throws IOException{
+    private String readFileName(DataInputStream in) throws IOException{
         int nameBytes = in.readInt(), readBytes = 0;
         byte[] buf = new byte[BUFSIZE];
         StringBuilder fileName = new StringBuilder();
@@ -64,7 +64,7 @@ public class FileLoadingThread implements Runnable {
         return fileName.toString();
     }
 
-    private void readFile(DataInputStream in, DataOutputStream out, String fileName) throws IOException{
+    private void readFile(DataInputStream in, String fileName) throws IOException{
         file = new File(Server.DIR_NAME + System.lineSeparator() + fileName);
         if(!file.createNewFile()){
             //how?
@@ -93,9 +93,8 @@ public class FileLoadingThread implements Runnable {
         startTimer();
         try (DataInputStream in
                      = new DataInputStream(clientSocket.getInputStream());
-        DataOutputStream out
-                = new DataOutputStream(clientSocket.getOutputStream())) {
-            readFile(in, out, readFileName(in, out));
+        ) {
+            readFile(in, readFileName(in));
         } catch(IOException ex) {
             throw new RuntimeException(ex);
         } finally {

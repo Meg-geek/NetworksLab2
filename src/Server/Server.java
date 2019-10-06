@@ -18,7 +18,6 @@ public class Server implements TCPServer{
         }
     }
 
-    //how to handle exceptions properly?
     public void work(int port){
         try(ServerSocket serverSocket = new ServerSocket(port, backlog, InetAddress.getByName(HOST))){
             int threadNumb = 0;

@@ -1,7 +1,6 @@
 package Client;
 
 import Client.ClientExceptions.ClientException;
-import Server.Server;
 
 import java.io.*;
 import java.net.Socket;
