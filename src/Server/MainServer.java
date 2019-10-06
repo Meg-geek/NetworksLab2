@@ -1,8 +1,5 @@
 package Server;
 
-
-import java.io.IOException;
-
 public class MainServer {
     public static final int SERVER_PORT = 7777;
 

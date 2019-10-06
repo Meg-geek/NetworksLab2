@@ -1,6 +1,7 @@
 package Client;
 
 import Client.ClientExceptions.ClientException;
+import Server.TCPServer;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,7 +19,7 @@ public class Client implements TCPClient{
         filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
         checkFile();
         sendFile(serverName, serverPort);
-
+        checkDataTransfer();
     }
 
     /*
@@ -30,6 +31,16 @@ public class Client implements TCPClient{
      * с числом байт в файле клиента
      * и отправляет соответвенно константу, успешно ли завершилась передача
      * */
+
+    private void checkDataTransfer() throws IOException{
+        try(DataInputStream in = new DataInputStream(socket.getInputStream())){
+            if(in.readInt() == TCPServer.SUCCESS){
+                System.out.println("File " + file.getName() + " was sent successfully");
+            } else {
+                System.out.println("Failure in sending file " + file.getName());
+            }
+        }
+    }
 
     private void sendFile(String serverName, int serverPort) throws IOException{
         socket = new Socket(serverName, serverPort);

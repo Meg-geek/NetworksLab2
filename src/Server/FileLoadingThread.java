@@ -25,8 +25,7 @@ public class FileLoadingThread implements Runnable {
     private final int threadNumb;
     private long readBytes, fileSize;
     private File file;
-   // private DataInputStream in;
-    //private DataOutputStream out;
+    private Timer timer;
 
     public FileLoadingThread(Socket clientSocket, int threadNumb){
         this.clientSocket = clientSocket;
@@ -34,7 +33,7 @@ public class FileLoadingThread implements Runnable {
     }
 
     private void startTimer(){
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.schedule(new TimerTask() {
             private long prevBytesAmount = 0;
             private final double sec = DELAY_MILSEC / (double)1000;
@@ -99,6 +98,7 @@ public class FileLoadingThread implements Runnable {
         ) {
             readFile(in, readFileName(in));
         } catch(IOException ex) {
+            timer.cancel();
             throw new RuntimeException(ex);
         } finally {
             try(DataOutputStream out
@@ -110,7 +110,10 @@ public class FileLoadingThread implements Runnable {
                     file.delete();
                 }
             } catch(IOException ex){
+                timer.cancel();
                 throw new RuntimeException(ex);
+            } finally {
+                timer.cancel();
             }
         }
     }
