@@ -26,12 +26,14 @@ public class Client implements TCPClient{
      * затем имя файла,
      * потом размер Файла - long,
      * затем файл
+     * в дальнейшем сервер сравнивает, совпадает ли прочитанное число байт
+     * с числом байт в файле клиента
+     * и отправляет соответвенно константу, успешно ли завершилась передача
      * */
+
     private void sendFile(String serverName, int serverPort) throws IOException{
         socket = new Socket(serverName, serverPort);
-        try(DataInputStream in =
-                    new DataInputStream(socket.getInputStream());
-            DataOutputStream out =
+        try(DataOutputStream out =
                     new DataOutputStream(socket.getOutputStream());
             FileInputStream fileInputStream = new FileInputStream(file)){
             out.writeInt(file.getName().getBytes().length);

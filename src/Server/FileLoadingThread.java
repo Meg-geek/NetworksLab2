@@ -12,6 +12,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * затем имя файла,
  * потом размер Файла - long,
  * затем файл
+ * в дальнейшем сервер сравнивает, совпадает ли прочитанное число байт
+ * с числом байт в файле клиента
+ * и отправляет соответвенно константу, успешно ли завершилась передача
  * */
 
 public class FileLoadingThread implements Runnable {
@@ -65,7 +68,7 @@ public class FileLoadingThread implements Runnable {
     }
 
     private void readFile(DataInputStream in, String fileName) throws IOException{
-        file = new File(Server.DIR_NAME + System.lineSeparator() + fileName);
+        file = new File(TCPServer.DIR_NAME + System.lineSeparator() + fileName);
         if(!file.createNewFile()){
             //how?
             System.out.println("File " + fileName + "already exists on server");
@@ -98,11 +101,16 @@ public class FileLoadingThread implements Runnable {
         } catch(IOException ex) {
             throw new RuntimeException(ex);
         } finally {
-            if(readBytes == fileSize){
-                System.out.println("Successful operation");
-            } else {
-                System.out.println("Operation wasn't successful");
-                file.delete();
+            try(DataOutputStream out
+                        = new DataOutputStream(clientSocket.getOutputStream())){
+                if(readBytes == fileSize){
+                    out.writeInt(TCPServer.SUCCESS);
+                } else {
+                    out.writeInt(TCPServer.FAILURE);
+                    file.delete();
+                }
+            } catch(IOException ex){
+                throw new RuntimeException(ex);
             }
         }
     }

@@ -7,13 +7,7 @@ public class MainServer {
     public static final int SERVER_PORT = 7777;
 
     public static void main(String[] args){
-        try{
-            Server server = new Server(SERVER_PORT);
-        } catch(IOException ex){
-            ex.printStackTrace();
-        }
-
-
-
+        Server server = new Server();
+        server.work(SERVER_PORT);
     }
 }
