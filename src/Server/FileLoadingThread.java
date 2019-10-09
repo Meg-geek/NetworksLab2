@@ -67,12 +67,16 @@ public class FileLoadingThread implements Runnable {
 
     private void readFile(DataInputStream in, String fileName) throws IOException{
         file = new File(TCPServer.DIR_NAME + File.separator + fileName);
+        //file can be ..
+        if(!file.getParentFile().getAbsolutePath().equals(System.getProperty("user.dir") +
+                File.separator + TCPServer.DIR_NAME)){
+            System.out.println("Wrong file name");
+            return;
+        }
         fileSize = in.readLong();
         if(!file.createNewFile()){
-            //how?
             System.out.println("File " + fileName + " already exists on server");
-            return; //?
-            //throw ServerException("File " + fileName + "already exists on server"); ?
+            return;
         }
         try(FileOutputStream fileWriter = new FileOutputStream(file)){
             readBytesAmount.addAndGet(8);

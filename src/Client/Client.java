@@ -15,7 +15,8 @@ public class Client implements TCPClient{
     private File file;
 
     public void sendFile(String path, String serverName, int serverPort) throws ClientException, IOException{
-        filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
+       // filePath = new String(path.getBytes(), StandardCharsets.UTF_8);
+        filePath = path;
         checkFile();
         try(Socket socket = new Socket(serverName, serverPort);
             DataInputStream in
@@ -49,8 +50,9 @@ public class Client implements TCPClient{
     private void sendFile(DataOutputStream out) throws IOException{
         try(FileInputStream fileInputStream
                     = new FileInputStream(file)){
-            out.writeInt(file.getName().getBytes().length);
-            out.write(file.getName().getBytes());
+            byte[] nameBytes = file.getName().getBytes(StandardCharsets.UTF_8);
+            out.writeInt(nameBytes.length);
+            out.write(nameBytes);
             out.writeLong(file.length());
             byte[] buf = new byte[BUF_SIZE];
             int bytesRead = fileInputStream.read(buf);
@@ -69,7 +71,7 @@ public class Client implements TCPClient{
         if(!file.isFile()){
             throw new ClientException(filePath + " isn't a file");
         }
-        if(file.getName().getBytes().length > MAX_FILENAME_LENGTH){
+        if(file.getName().getBytes(StandardCharsets.UTF_8).length > MAX_FILENAME_LENGTH){
             throw new ClientException("Filename" + filePath + " is too long");
         }
         fileLength = file.length();
